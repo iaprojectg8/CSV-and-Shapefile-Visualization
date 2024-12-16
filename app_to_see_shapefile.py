@@ -100,14 +100,14 @@ if uploaded_csv:
     try:
         # Load CSV into a DataFrame
         csv_df = pd.read_csv(uploaded_csv)
-
+        unique_pairs = csv_df[['lat', 'lon']].drop_duplicates()
         # Check if necessary columns exist
         if 'lon' in csv_df.columns and 'lat' in csv_df.columns:
             # Create Folium map with points
             st.subheader("Uploaded Coordinates Map")
-            m = folium.Map(location=[csv_df['lat'].mean(), csv_df['lon'].mean()], zoom_start=8,control_scale=True)
+            m = folium.Map(location=[unique_pairs['lat'].mean(), unique_pairs['lon'].mean()], zoom_start=8,control_scale=True)
             m.add_child(MeasureControl(primary_length_unit='meters'))
-            for _, row in csv_df.iterrows():
+            for _, row in unique_pairs.iterrows():
                 folium.Marker(location=[row['lat'], row['lon']]).add_to(m)
             st_folium(m, width=700, height=500)
         else:
