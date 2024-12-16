@@ -51,7 +51,9 @@ if uploaded_files:
             # Load the shapefile using GeoPandas
             shapefile_path = file_mapping[".shp"]
             gdf = gpd.read_file(shapefile_path)
-
+            print(gdf.crs)
+            gdf = gdf.to_crs("EPSG:4326")
+            print(gdf.crs)
             # Display GeoDataFrame info
             st.subheader("Shapefile Information")
             st.write(gdf)
@@ -59,8 +61,6 @@ if uploaded_files:
             # Create a Folium map
        
             center = [gdf.geometry.centroid.y.mean(), gdf.geometry.centroid.x.mean()]
-            print(center)
-            print(type(gdf))
             m = folium.Map(location=center, zoom_start=8)
             folium.GeoJson(gdf).add_to(m)
 
@@ -71,16 +71,20 @@ if uploaded_files:
             # Option to generate CSV
             st.header("Generate CSV from Shapefile")
             resolution = st.number_input("Enter resolution (e.g., 0.01 degrees):", min_value=0.001, value=0.01, step=0.01)
+            # Store the generated CSV in Streamlit session state
             if st.button("Generate CSV"):
                 csv_data = generate_csv_from_shape(gdf, resolution)
                 st.write("Generated CSV Preview:")
                 st.write(csv_data.head())
 
-                # Download link for the CSV
-                csv_file = csv_data.to_csv(index=False).encode('utf-8')
+                # Save CSV to session state
+                st.session_state['csv_file'] = csv_data.to_csv(index=False).encode('utf-8')
+
+            # Display download button if CSV is generated
+            if 'csv_file' in st.session_state:
                 st.download_button(
                     label="Download CSV",
-                    data=csv_file,
+                    data=st.session_state['csv_file'],
                     file_name="generated_points.csv",
                     mime="text/csv"
                 )
